@@ -1,5 +1,7 @@
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 type Market = {
   market: string;
@@ -75,6 +77,16 @@ export default async function ProductDetailsPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // Login/session check
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  // Login না থাকলে signin page-এ পাঠাবে
+  if (!session) {
+    redirect("/signin");
+  }
+
   const { slug } = await params;
 
   const response = await fetch(API_URL);
@@ -111,20 +123,19 @@ export default async function ProductDetailsPage({
     product.change.dir === "up"
       ? "▲"
       : product.change.dir === "down"
-      ? "▼"
-      : "—";
+        ? "▼"
+        : "—";
 
   const changeColor =
     product.change.dir === "up"
       ? "text-green-700 bg-green-100"
       : product.change.dir === "down"
-      ? "text-red-600 bg-red-100"
-      : "text-slate-600 bg-slate-100";
+        ? "text-red-600 bg-red-100"
+        : "text-slate-600 bg-slate-100";
 
   return (
     <main className="min-h-screen bg-[#fffdf7] text-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-
         {/* Back button */}
         <Link
           href="/"
@@ -136,7 +147,6 @@ export default async function ProductDetailsPage({
         {/* Product Header */}
         <section className="mt-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-
             <div className="flex items-start gap-5">
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-5xl md:h-24 md:w-24 md:text-6xl">
                 {product.image}
@@ -152,14 +162,13 @@ export default async function ProductDetailsPage({
                 </h1>
 
                 <p className="mt-3 max-w-xl text-slate-500">
-                  আজকের বাজারভিত্তিক মূল্য, সর্বনিম্ন ও
-                  সর্বোচ্চ দাম এবং সাম্প্রতিক মূল্য পরিবর্তন।
+                  আজকের বাজারভিত্তিক মূল্য, সর্বনিম্ন ও সর্বোচ্চ দাম এবং
+                  সাম্প্রতিক মূল্য পরিবর্তন।
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-                    {product.categoryIcon}{" "}
-                    {product.categoryNameBn}
+                    {product.categoryIcon} {product.categoryNameBn}
                   </span>
 
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
@@ -183,10 +192,7 @@ export default async function ProductDetailsPage({
                 className={`mt-3 inline-block rounded-full px-3 py-1 text-sm font-semibold ${changeColor}`}
               >
                 {changeIcon}{" "}
-                {toBanglaNumber(
-                  Math.abs(product.change.pct)
-                )}
-                %
+                {toBanglaNumber(Math.abs(product.change.pct))}%
               </span>
             </div>
           </div>
@@ -199,7 +205,6 @@ export default async function ProductDetailsPage({
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm text-slate-500">
                 সর্বনিম্ন দাম
@@ -239,14 +244,12 @@ export default async function ProductDetailsPage({
                 {toBanglaNumber(product.yesterday)} টাকা
               </p>
             </div>
-
           </div>
         </section>
 
         {/* Previous Prices */}
         <section className="mt-8">
           <div className="grid gap-4 sm:grid-cols-3">
-
             <div className="rounded-xl border bg-white p-4">
               <p className="text-sm text-slate-500">
                 আজ
@@ -276,33 +279,28 @@ export default async function ProductDetailsPage({
                 {toBanglaNumber(product.lastMonth)} টাকা
               </p>
             </div>
-
           </div>
         </section>
 
         {/* Market Price Section */}
         <section className="mt-12">
-
           <div className="mb-6">
             <h2 className="text-2xl font-bold">
               বাজারভিত্তিক আজকের দাম
             </h2>
 
             <p className="mt-2 text-slate-500">
-              বিভিন্ন বাজারে {product.nameBn}-এর
-              সর্বনিম্ন ও সর্বোচ্চ মূল্য
+              বিভিন্ন বাজারে {product.nameBn}-এর সর্বনিম্ন ও সর্বোচ্চ মূল্য
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-
             {product.markets.map((market) => (
               <div
                 key={`${market.market}-${market.division}`}
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
               >
                 <div className="flex items-center justify-between gap-5">
-
                   <div>
                     <h3 className="font-bold text-slate-900">
                       {market.market}
@@ -324,14 +322,11 @@ export default async function ProductDetailsPage({
                       {toBanglaNumber(market.max)} টাকা
                     </p>
                   </div>
-
                 </div>
               </div>
             ))}
-
           </div>
         </section>
-
       </div>
     </main>
   );
