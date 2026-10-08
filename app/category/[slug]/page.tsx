@@ -1,14 +1,6 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-
-type Market = {
-  market: string;
-  division: string;
-  min: number;
-  max: number;
-};
+import { notFound } from "next/navigation";
+import SortSelect from "./SortSelect";
 
 type Product = {
   id: number;
@@ -27,7 +19,6 @@ type Product = {
     dir: "up" | "down" | "flat";
     pct: number;
   };
-  markets: Market[];
 };
 
 const API_URLS = [
@@ -45,15 +36,15 @@ async function getProducts(): Promise<Product[]> {
         return data;
       }
     } catch (error) {
-      console.error(`Failed to fetch products from ${url}`, error);
+      console.error(`Failed to fetch category products from ${url}`, error);
     }
   }
 
-  throw new Error("Product data fetch failed from all APIs");
+  throw new Error("Category product data fetch failed from all APIs");
 }
 
 function toBanglaNumber(value: number | string) {
-  const banglaDigits: Record<string, string> = {
+  const map: Record<string, string> = {
     "0": "০",
     "1": "১",
     "2": "২",
@@ -66,280 +57,128 @@ function toBanglaNumber(value: number | string) {
     "9": "৯",
   };
 
-  return String(value).replace(
-    /[0-9]/g,
-    (digit) => banglaDigits[digit]
-  );
+  return String(value).replace(/[0-9]/g, (digit) => map[digit]);
 }
 
 function getUnit(unit: string) {
-  switch (unit) {
-    case "kg":
-      return "প্রতি কেজি";
+  if (unit === "kg") return "প্রতি কেজি";
+  if (unit === "litre") return "প্রতি লিটার";
+  if (unit === "dozen") return "প্রতি ডজন";
+  if (unit === "piece") return "প্রতি পিস";
 
-    case "litre":
-      return "প্রতি লিটার";
-
-    case "dozen":
-      return "প্রতি ডজন";
-
-    case "piece":
-      return "প্রতি পিস";
-
-    default:
-      return unit;
-  }
+  return unit;
 }
 
-export default async function ProductDetailsPage({
+export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ sort?: string }>;
 }) {
-  // Login check
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/signin");
-  }
-
   const { slug } = await params;
+  const { sort = "default" } = await searchParams;
 
-  // API fallback
   const products = await getProducts();
 
-  const product = products.find(
-    (item) => item.slug === decodeURIComponent(slug)
+  const decodedSlug = decodeURIComponent(slug).toLowerCase();
+
+  const categoryProducts = products.filter(
+    (product) => product.category.toLowerCase() === decodedSlug
   );
 
-  if (!product) {
+  if (categoryProducts.length === 0) {
     notFound();
   }
 
-  const minimumPrice = Math.min(
-    ...product.markets.map((market) => market.min)
-  );
+  let sortedProducts = [...categoryProducts];
 
-  const maximumPrice = Math.max(
-    ...product.markets.map((market) => market.max)
-  );
+  if (sort === "low") {
+    sortedProducts.sort((a, b) => a.today - b.today);
+  }
 
-  const averagePrice = Math.round(
-    product.markets.reduce((total, market) => {
-      return total + (market.min + market.max) / 2;
-    }, 0) / product.markets.length
-  );
+  if (sort === "high") {
+    sortedProducts.sort((a, b) => b.today - a.today);
+  }
 
-  const changeIcon =
-    product.change.dir === "up"
-      ? "▲"
-      : product.change.dir === "down"
-        ? "▼"
-        : "—";
-
-  const changeColor =
-    product.change.dir === "up"
-      ? "text-green-700 bg-green-100"
-      : product.change.dir === "down"
-        ? "text-red-600 bg-red-100"
-        : "text-slate-600 bg-slate-100";
+  const categoryName = categoryProducts[0].categoryNameBn;
+  const categoryIcon = categoryProducts[0].categoryIcon;
 
   return (
     <main className="min-h-screen bg-[#fffdf7] text-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-        {/* Back Button */}
+      <div className="mx-auto max-w-6xl px-4 py-10">
         <Link
           href="/"
-          className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
+          className="inline-flex items-center rounded-lg border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
         >
           ← হোম পেজে ফিরে যান
         </Link>
 
-        {/* Product Header */}
-        <section className="mt-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-          <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-5">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-5xl md:h-24 md:w-24 md:text-6xl">
-                {product.image}
-              </div>
+        <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-5xl">{categoryIcon}</div>
 
-              <div>
-                <p className="mb-2 text-sm font-medium text-green-700">
-                  পণ্যের বিস্তারিত
-                </p>
-
-                <h1 className="text-3xl font-bold md:text-4xl">
-                  {product.nameBn}
-                </h1>
-
-                <p className="mt-3 max-w-xl text-slate-500">
-                  আজকের বাজারভিত্তিক মূল্য, সর্বনিম্ন ও সর্বোচ্চ দাম এবং
-                  সাম্প্রতিক মূল্য পরিবর্তন।
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-                    {product.categoryIcon} {product.categoryNameBn}
-                  </span>
-
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
-                    {getUnit(product.unit)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Today Price */}
-            <div className="min-w-[220px] rounded-2xl bg-green-50 p-6">
-              <p className="text-sm text-slate-500">
-                আজকের দাম
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-green-700">
-                {toBanglaNumber(product.today)} টাকা
-              </p>
-
-              <span
-                className={`mt-3 inline-block rounded-full px-3 py-1 text-sm font-semibold ${changeColor}`}
-              >
-                {changeIcon}{" "}
-                {toBanglaNumber(Math.abs(product.change.pct))}%
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Price Summary */}
-        <section className="mt-10">
-          <h2 className="mb-5 text-2xl font-bold">
-            মূল্য সংক্ষেপ
-          </h2>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-slate-500">
-                সর্বনিম্ন দাম
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-green-700">
-                {toBanglaNumber(minimumPrice)} টাকা
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-slate-500">
-                সর্বোচ্চ দাম
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-red-600">
-                {toBanglaNumber(maximumPrice)} টাকা
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-slate-500">
-                গড় দাম
-              </p>
-
-              <p className="mt-2 text-2xl font-bold">
-                {toBanglaNumber(averagePrice)} টাকা
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-slate-500">
-                গতকালের দাম
-              </p>
-
-              <p className="mt-2 text-2xl font-bold">
-                {toBanglaNumber(product.yesterday)} টাকা
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Previous Prices */}
-        <section className="mt-8">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border bg-white p-4">
-              <p className="text-sm text-slate-500">
-                আজ
-              </p>
-
-              <p className="mt-1 font-bold">
-                {toBanglaNumber(product.today)} টাকা
-              </p>
-            </div>
-
-            <div className="rounded-xl border bg-white p-4">
-              <p className="text-sm text-slate-500">
-                গত সপ্তাহ
-              </p>
-
-              <p className="mt-1 font-bold">
-                {toBanglaNumber(product.lastWeek)} টাকা
-              </p>
-            </div>
-
-            <div className="rounded-xl border bg-white p-4">
-              <p className="text-sm text-slate-500">
-                গত মাস
-              </p>
-
-              <p className="mt-1 font-bold">
-                {toBanglaNumber(product.lastMonth)} টাকা
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Market Prices */}
-        <section className="mt-12">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">
-              বাজারভিত্তিক আজকের দাম
-            </h2>
+            <h1 className="mt-4 text-3xl font-bold md:text-4xl">
+              {categoryName}
+            </h1>
 
             <p className="mt-2 text-slate-500">
-              বিভিন্ন বাজারে {product.nameBn}-এর সর্বনিম্ন ও সর্বোচ্চ মূল্য
+              আজকের {categoryName}-এর বাজারদর
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {product.markets.map((market) => (
-              <div
-                key={`${market.market}-${market.division}`}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+          <SortSelect />
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {sortedProducts.map((product) => {
+            const isUp = product.change.dir === "up";
+            const isDown = product.change.dir === "down";
+
+            return (
+              <Link
+                key={product.id}
+                href={`/product/${product.slug}`}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="flex items-center justify-between gap-5">
+                <div className="text-5xl">{product.image}</div>
+
+                <h2 className="mt-4 text-lg font-bold text-slate-900">
+                  {product.nameBn}
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  {getUnit(product.unit)}
+                </p>
+
+                <div className="mt-5 flex items-end justify-between gap-3">
                   <div>
-                    <h3 className="font-bold text-slate-900">
-                      {market.market}
-                    </h3>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      📍 {market.division}
-                    </p>
-                  </div>
-
-                  <div className="text-right">
                     <p className="text-xs text-slate-500">
-                      {getUnit(product.unit)}
+                      আজকের দাম
                     </p>
 
-                    <p className="mt-1 font-bold text-green-700">
-                      {toBanglaNumber(market.min)}
-                      {" - "}
-                      {toBanglaNumber(market.max)} টাকা
+                    <p className="mt-1 text-xl font-bold text-slate-900">
+                      {toBanglaNumber(product.today)} টাকা
                     </p>
                   </div>
+
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      isUp
+                        ? "bg-green-100 text-green-700"
+                        : isDown
+                          ? "bg-red-100 text-red-700"
+                          : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
+                    {toBanglaNumber(Math.abs(product.change.pct))}%
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </main>
   );

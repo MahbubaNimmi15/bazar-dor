@@ -69,6 +69,16 @@ function getUnit(unit: string) {
   return unit;
 }
 
+function getBanglaDate() {
+  return new Intl.DateTimeFormat("bn-BD", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
+  }).format(new Date());
+}
+
 function ProductCard({ product }: { product: Product }) {
   const isUp = product.change.dir === "up";
   const isDown = product.change.dir === "down";
@@ -155,7 +165,7 @@ export default async function Home() {
               </h1>
 
               <p className="text-xs text-slate-500">
-                আজকের বাজার, এক নজরে
+                {getBanglaDate()}
               </p>
             </div>
           </Link>
