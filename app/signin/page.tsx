@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export default function SignUpPage() {
+export default function SignInPage() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,39 +20,31 @@ export default function SignUpPage() {
     setMessage("");
     setIsError(false);
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setIsError(true);
-      setMessage("সবগুলো তথ্য পূরণ করুন।");
-      return;
-    }
-
-    if (password.length < 8) {
-      setIsError(true);
-      setMessage("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+      setMessage("ইমেইল এবং পাসওয়ার্ড দিন।");
       return;
     }
 
     setLoading(true);
 
     try {
-      const { error } = await authClient.signUp.email({
-        name,
+      const { error } = await authClient.signIn.email({
         email,
         password,
       });
 
       if (error) {
         setIsError(true);
-        setMessage(error.message || "রেজিস্ট্রেশন ব্যর্থ হয়েছে।");
+        setMessage(error.message || "সাইন ইন ব্যর্থ হয়েছে।");
         return;
       }
 
       setIsError(false);
-      setMessage("রেজিস্ট্রেশন সফল হয়েছে।");
+      setMessage("সাইন ইন সফল হয়েছে।");
 
-      setTimeout(() => {
-        router.push("/signin");
-      }, 800);
+      router.push("/");
+      router.refresh();
     } catch {
       setIsError(true);
       setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
@@ -70,29 +60,15 @@ export default function SignUpPage() {
           <div className="text-5xl">🛒</div>
 
           <h1 className="mt-4 text-3xl font-bold text-slate-900">
-            নতুন অ্যাকাউন্ট তৈরি করুন
+            সাইন ইন করুন
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            বাজার দর ব্যবহার করতে আপনার তথ্য দিন
+            আপনার বাজার দর অ্যাকাউন্টে প্রবেশ করুন
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              নাম
-            </label>
-
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="আপনার নাম"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
-            />
-          </div>
-
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
               ইমেইল
@@ -116,7 +92,7 @@ export default function SignUpPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="কমপক্ষে ৮ অক্ষর"
+              placeholder="আপনার পাসওয়ার্ড"
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
             />
           </div>
@@ -138,18 +114,18 @@ export default function SignUpPage() {
             disabled={loading}
             className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "রেজিস্ট্রেশন হচ্ছে..." : "রেজিস্টার করুন"}
+            {loading ? "সাইন ইন হচ্ছে..." : "সাইন ইন"}
           </button>
         </form>
 
         <div className="mt-6 border-t border-slate-200 pt-6 text-center">
           <p className="text-sm text-slate-500">
-            আগে থেকেই অ্যাকাউন্ট আছে?{" "}
+            অ্যাকাউন্ট নেই?{" "}
             <Link
-              href="/signin"
+              href="/signup"
               className="font-semibold text-green-700 hover:underline"
             >
-              সাইন ইন করুন
+              রেজিস্টার করুন
             </Link>
           </p>
         </div>
