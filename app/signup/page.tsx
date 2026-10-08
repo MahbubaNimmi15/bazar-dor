@@ -13,7 +13,9 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<
+    "google" | "github" | null
+  >(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,9 +40,7 @@ export default function SignUpPage() {
       });
 
       if (error) {
-        toast.error(
-          error.message || "রেজিস্ট্রেশন করা যায়নি।"
-        );
+        toast.error(error.message || "রেজিস্ট্রেশন করা যায়নি।");
         return;
       }
 
@@ -55,24 +55,26 @@ export default function SignUpPage() {
     }
   }
 
-  async function handleGithubLogin() {
-    setSocialLoading(true);
+  async function handleSocialLogin(
+    provider: "google" | "github"
+  ) {
+    setSocialLoading(provider);
 
     try {
       const { error } = await authClient.signIn.social({
-        provider: "github",
+        provider,
         callbackURL: "/",
       });
 
       if (error) {
         toast.error(
-          error.message || "GitHub login শুরু করা যায়নি।"
+          `${provider === "google" ? "Google" : "GitHub"} login শুরু করা যায়নি।`
         );
-        setSocialLoading(false);
+        setSocialLoading(null);
       }
     } catch {
-      toast.error("GitHub login শুরু করা যায়নি।");
-      setSocialLoading(false);
+      toast.error("Social login শুরু করা যায়নি।");
+      setSocialLoading(null);
     }
   }
 
@@ -91,17 +93,27 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* Social Login */}
-        <div className="mt-8">
+        <div className="mt-8 space-y-3">
           <button
             type="button"
-            onClick={handleGithubLogin}
-            disabled={socialLoading}
+            onClick={() => handleSocialLogin("google")}
+            disabled={socialLoading !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            <span className="font-bold">G</span>
+            {socialLoading === "google"
+              ? "Google খুলছে..."
+              : "Google দিয়ে চালিয়ে যান"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSocialLogin("github")}
+            disabled={socialLoading !== null}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-black disabled:opacity-60"
           >
             <span className="text-lg">◉</span>
-
-            {socialLoading
+            {socialLoading === "github"
               ? "GitHub খুলছে..."
               : "GitHub দিয়ে চালিয়ে যান"}
           </button>
@@ -109,11 +121,7 @@ export default function SignUpPage() {
 
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-slate-200" />
-
-          <span className="text-xs text-slate-400">
-            অথবা
-          </span>
-
+          <span className="text-xs text-slate-400">অথবা</span>
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
@@ -175,7 +183,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
           >
             {loading ? "রেজিস্টার হচ্ছে..." : "রেজিস্টার করুন"}
           </button>

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -13,8 +13,18 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<
-    "github" | null
+    "google" | "github" | null
   >(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("reason") === "protected") {
+      toast.error("পণ্যের বিস্তারিত দেখতে আগে সাইন ইন করুন।");
+
+      window.history.replaceState({}, "", "/signin");
+    }
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,9 +43,7 @@ export default function SignInPage() {
       });
 
       if (error) {
-        toast.error(
-          error.message || "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।"
-        );
+        toast.error(error.message || "সাইন ইন করা যায়নি।");
         return;
       }
 
@@ -50,23 +58,28 @@ export default function SignInPage() {
     }
   }
 
-  async function handleGithubLogin() {
-    setSocialLoading("github");
+  async function handleSocialLogin(
+    provider: "google" | "github"
+  ) {
+    setSocialLoading(provider);
 
     try {
       const { error } = await authClient.signIn.social({
-        provider: "github",
+        provider,
         callbackURL: "/",
       });
 
       if (error) {
         toast.error(
-          error.message || "GitHub login শুরু করা যায়নি।"
+          `${
+            provider === "google" ? "Google" : "GitHub"
+          } login শুরু করা যায়নি।`
         );
+
         setSocialLoading(null);
       }
     } catch {
-      toast.error("GitHub login শুরু করা যায়নি।");
+      toast.error("Social login শুরু করা যায়নি।");
       setSocialLoading(null);
     }
   }
@@ -86,10 +99,23 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 space-y-3">
           <button
             type="button"
-            onClick={handleGithubLogin}
+            onClick={() => handleSocialLogin("google")}
+            disabled={socialLoading !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            <span className="font-bold">G</span>
+
+            {socialLoading === "google"
+              ? "Google খুলছে..."
+              : "Google দিয়ে সাইন ইন"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSocialLogin("github")}
             disabled={socialLoading !== null}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-black disabled:opacity-60"
           >
@@ -151,7 +177,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
           >
             {loading ? "সাইন ইন হচ্ছে..." : "সাইন ইন"}
           </button>
