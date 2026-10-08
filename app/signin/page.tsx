@@ -13,6 +13,9 @@ export default function SignInPage() {
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<
+    "google" | "github" | null
+  >(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,6 +56,36 @@ export default function SignInPage() {
     }
   }
 
+  async function handleGoogleLogin() {
+    try {
+      setSocialLoading("google");
+
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setSocialLoading(null);
+      setIsError(true);
+      setMessage("Google login শুরু করা যায়নি।");
+    }
+  }
+
+  async function handleGithubLogin() {
+    try {
+      setSocialLoading("github");
+
+      await authClient.signIn.social({
+        provider: "github",
+        callbackURL: "/",
+      });
+    } catch {
+      setSocialLoading(null);
+      setIsError(true);
+      setMessage("GitHub login শুরু করা যায়নি।");
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#fffdf7] px-4 py-10">
       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-8">
@@ -68,7 +101,41 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <div className="mt-8 space-y-3">
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={socialLoading !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            <span className="text-lg">G</span>
+            {socialLoading === "google"
+              ? "Google খুলছে..."
+              : "Google দিয়ে সাইন ইন"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGithubLogin}
+            disabled={socialLoading !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-black disabled:opacity-60"
+          >
+            <span className="text-lg">◉</span>
+            {socialLoading === "github"
+              ? "GitHub খুলছে..."
+              : "GitHub দিয়ে সাইন ইন"}
+          </button>
+        </div>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs text-slate-400">
+            অথবা
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
               ইমেইল
