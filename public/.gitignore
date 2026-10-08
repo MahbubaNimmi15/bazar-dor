@@ -1,0 +1,9 @@
+# Local authentication database
+database.sqlite
+database.sqlite-shm
+database.sqlite-wal
+
+# Environment variables
+.env
+.env.local
+.env.*.local
