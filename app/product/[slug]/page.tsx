@@ -30,8 +30,27 @@ type Product = {
   markets: Market[];
 };
 
-const API_URL =
-  "https://api.api-store.workers.dev/api/bazardor/products";
+const API_URLS = [
+  "https://api.api-store.workers.dev/api/bazardor/products",
+  "https://api.abcz.workers.dev/api/bazardor/products",
+];
+
+async function getProducts(): Promise<Product[]> {
+  for (const url of API_URLS) {
+    try {
+      const response = await fetch(url);
+
+      if (response.ok) {
+        const data: Product[] = await response.json();
+        return data;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch products from ${url}`, error);
+    }
+  }
+
+  throw new Error("Product data fetch failed from all APIs");
+}
 
 function toBanglaNumber(value: number | string) {
   const banglaDigits: Record<string, string> = {
@@ -77,25 +96,17 @@ export default async function ProductDetailsPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // Login/session check
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  // Login না থাকলে signin page-এ পাঠাবে
   if (!session) {
     redirect("/signin");
   }
 
   const { slug } = await params;
 
-  const response = await fetch(API_URL);
-
-  if (!response.ok) {
-    throw new Error("Product data fetch failed");
-  }
-
-  const products: Product[] = await response.json();
+  const products = await getProducts();
 
   const product = products.find(
     (item) => item.slug === decodeURIComponent(slug)
@@ -136,7 +147,6 @@ export default async function ProductDetailsPage({
   return (
     <main className="min-h-screen bg-[#fffdf7] text-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-        {/* Back button */}
         <Link
           href="/"
           className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
@@ -144,7 +154,6 @@ export default async function ProductDetailsPage({
           ← হোম পেজে ফিরে যান
         </Link>
 
-        {/* Product Header */}
         <section className="mt-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-5">
@@ -178,7 +187,6 @@ export default async function ProductDetailsPage({
               </div>
             </div>
 
-            {/* Today Price */}
             <div className="min-w-[220px] rounded-2xl bg-green-50 p-6">
               <p className="text-sm text-slate-500">
                 আজকের দাম
@@ -198,7 +206,6 @@ export default async function ProductDetailsPage({
           </div>
         </section>
 
-        {/* Price Summary */}
         <section className="mt-10">
           <h2 className="mb-5 text-2xl font-bold">
             মূল্য সংক্ষেপ
@@ -247,7 +254,6 @@ export default async function ProductDetailsPage({
           </div>
         </section>
 
-        {/* Previous Prices */}
         <section className="mt-8">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border bg-white p-4">
@@ -282,7 +288,6 @@ export default async function ProductDetailsPage({
           </div>
         </section>
 
-        {/* Market Price Section */}
         <section className="mt-12">
           <div className="mb-6">
             <h2 className="text-2xl font-bold">
