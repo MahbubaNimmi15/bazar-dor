@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -11,26 +12,18 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setMessage("");
-    setIsError(false);
-
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setIsError(true);
-      setMessage("সবগুলো তথ্য পূরণ করুন।");
+      toast.error("সব তথ্য পূরণ করুন।");
       return;
     }
 
     if (password.length < 8) {
-      setIsError(true);
-      setMessage("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+      toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
       return;
     }
 
@@ -38,26 +31,25 @@ export default function SignUpPage() {
 
     try {
       const { error } = await authClient.signUp.email({
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
         password,
       });
 
       if (error) {
-        setIsError(true);
-        setMessage(error.message || "রেজিস্ট্রেশন ব্যর্থ হয়েছে।");
+        toast.error(
+          error.message || "রেজিস্ট্রেশন করা যায়নি।"
+        );
         return;
       }
 
-      setIsError(false);
-      setMessage("রেজিস্ট্রেশন সফল হয়েছে।");
+      toast.success("রেজিস্ট্রেশন সফল হয়েছে। এখন সাইন ইন করুন।");
 
       setTimeout(() => {
         router.push("/signin");
-      }, 800);
+      }, 700);
     } catch {
-      setIsError(true);
-      setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      toast.error("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setLoading(false);
     }
@@ -70,21 +62,28 @@ export default function SignUpPage() {
           <div className="text-5xl">🛒</div>
 
           <h1 className="mt-4 text-3xl font-bold text-slate-900">
-            নতুন অ্যাকাউন্ট তৈরি করুন
+            রেজিস্টার করুন
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            বাজার দর ব্যবহার করতে আপনার তথ্য দিন
+            নতুন বাজার দর অ্যাকাউন্ট তৈরি করুন
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 space-y-5"
+        >
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="name"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               নাম
             </label>
 
             <input
+              id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -94,11 +93,15 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               ইমেইল
             </label>
 
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -108,11 +111,15 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               পাসওয়ার্ড
             </label>
 
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -121,30 +128,18 @@ export default function SignUpPage() {
             />
           </div>
 
-          {message && (
-            <div
-              className={`rounded-xl px-4 py-3 text-sm ${
-                isError
-                  ? "bg-red-50 text-red-600"
-                  : "bg-green-50 text-green-700"
-              }`}
-            >
-              {message}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "রেজিস্ট্রেশন হচ্ছে..." : "রেজিস্টার করুন"}
+            {loading ? "রেজিস্টার হচ্ছে..." : "রেজিস্টার করুন"}
           </button>
         </form>
 
         <div className="mt-6 border-t border-slate-200 pt-6 text-center">
           <p className="text-sm text-slate-500">
-            আগে থেকেই অ্যাকাউন্ট আছে?{" "}
+            ইতোমধ্যে অ্যাকাউন্ট আছে?{" "}
             <Link
               href="/signin"
               className="font-semibold text-green-700 hover:underline"

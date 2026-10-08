@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -15,13 +16,12 @@ export default function ProfilePage() {
   } = authClient.useSession();
 
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
+      toast.error("প্রোফাইল দেখতে আগে সাইন ইন করুন।");
       router.replace("/signin");
     }
   }, [session, isPending, router]);
@@ -35,12 +35,8 @@ export default function ProfilePage() {
   async function handleUpdate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setMessage("");
-    setIsError(false);
-
     if (!name.trim()) {
-      setIsError(true);
-      setMessage("নাম লিখুন।");
+      toast.error("নাম লিখুন।");
       return;
     }
 
@@ -52,18 +48,17 @@ export default function ProfilePage() {
       });
 
       if (error) {
-        setIsError(true);
-        setMessage(error.message || "নাম আপডেট করা যায়নি।");
+        toast.error(
+          error.message || "প্রোফাইল আপডেট করা যায়নি।"
+        );
         return;
       }
 
       await refetch();
 
-      setIsError(false);
-      setMessage("প্রোফাইল সফলভাবে আপডেট হয়েছে।");
+      toast.success("প্রোফাইল সফলভাবে আপডেট হয়েছে।");
     } catch {
-      setIsError(true);
-      setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      toast.error("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setSaving(false);
     }
@@ -72,10 +67,17 @@ export default function ProfilePage() {
   async function handleLogout() {
     setLoggingOut(true);
 
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
 
-    router.push("/signin");
-    router.refresh();
+      toast.success("সফলভাবে লগ আউট হয়েছে।");
+
+      router.push("/signin");
+      router.refresh();
+    } catch {
+      toast.error("লগ আউট করা যায়নি।");
+      setLoggingOut(false);
+    }
   }
 
   if (isPending) {
@@ -163,18 +165,6 @@ export default function ProfilePage() {
                 className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
               />
             </div>
-
-            {message && (
-              <div
-                className={`mt-5 rounded-xl px-4 py-3 text-sm ${
-                  isError
-                    ? "bg-red-50 text-red-600"
-                    : "bg-green-50 text-green-700"
-                }`}
-              >
-                {message}
-              </div>
-            )}
 
             <button
               type="submit"

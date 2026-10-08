@@ -4,28 +4,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function SignInPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<
-    "google" | "github" | null
+    "github" | null
   >(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setMessage("");
-    setIsError(false);
-
     if (!email.trim() || !password.trim()) {
-      setIsError(true);
-      setMessage("ইমেইল এবং পাসওয়ার্ড দিন।");
+      toast.error("ইমেইল এবং পাসওয়ার্ড দিন।");
       return;
     }
 
@@ -38,51 +33,41 @@ export default function SignInPage() {
       });
 
       if (error) {
-        setIsError(true);
-        setMessage(error.message || "সাইন ইন ব্যর্থ হয়েছে।");
+        toast.error(
+          error.message || "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।"
+        );
         return;
       }
 
-      setIsError(false);
-      setMessage("সাইন ইন সফল হয়েছে।");
+      toast.success("সাইন ইন সফল হয়েছে।");
 
       router.push("/");
       router.refresh();
     } catch {
-      setIsError(true);
-      setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      toast.error("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleGoogleLogin() {
-    try {
-      setSocialLoading("google");
-
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
-    } catch {
-      setSocialLoading(null);
-      setIsError(true);
-      setMessage("Google login শুরু করা যায়নি।");
-    }
-  }
-
   async function handleGithubLogin() {
-    try {
-      setSocialLoading("github");
+    setSocialLoading("github");
 
-      await authClient.signIn.social({
+    try {
+      const { error } = await authClient.signIn.social({
         provider: "github",
         callbackURL: "/",
       });
+
+      if (error) {
+        toast.error(
+          error.message || "GitHub login শুরু করা যায়নি।"
+        );
+        setSocialLoading(null);
+      }
     } catch {
+      toast.error("GitHub login শুরু করা যায়নি।");
       setSocialLoading(null);
-      setIsError(true);
-      setMessage("GitHub login শুরু করা যায়নি।");
     }
   }
 
@@ -101,19 +86,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <div className="mt-8 space-y-3">
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={socialLoading !== null}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
-          >
-            <span className="text-lg">G</span>
-            {socialLoading === "google"
-              ? "Google খুলছে..."
-              : "Google দিয়ে সাইন ইন"}
-          </button>
-
+        <div className="mt-8">
           <button
             type="button"
             onClick={handleGithubLogin}
@@ -121,6 +94,7 @@ export default function SignInPage() {
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-black disabled:opacity-60"
           >
             <span className="text-lg">◉</span>
+
             {socialLoading === "github"
               ? "GitHub খুলছে..."
               : "GitHub দিয়ে সাইন ইন"}
@@ -129,19 +103,25 @@ export default function SignInPage() {
 
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-slate-200" />
+
           <span className="text-xs text-slate-400">
             অথবা
           </span>
+
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               ইমেইল
             </label>
 
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -151,11 +131,15 @@ export default function SignInPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               পাসওয়ার্ড
             </label>
 
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -163,18 +147,6 @@ export default function SignInPage() {
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
             />
           </div>
-
-          {message && (
-            <div
-              className={`rounded-xl px-4 py-3 text-sm ${
-                isError
-                  ? "bg-red-50 text-red-600"
-                  : "bg-green-50 text-green-700"
-              }`}
-            >
-              {message}
-            </div>
-          )}
 
           <button
             type="submit"
