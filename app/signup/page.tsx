@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,15 +44,35 @@ export default function SignUpPage() {
         return;
       }
 
-      toast.success("রেজিস্ট্রেশন সফল হয়েছে। এখন সাইন ইন করুন।");
+      toast.success("রেজিস্ট্রেশন সফল হয়েছে।");
 
-      setTimeout(() => {
-        router.push("/signin");
-      }, 700);
+      router.push("/signin");
+      router.refresh();
     } catch {
       toast.error("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGithubLogin() {
+    setSocialLoading(true);
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "github",
+        callbackURL: "/",
+      });
+
+      if (error) {
+        toast.error(
+          error.message || "GitHub login শুরু করা যায়নি।"
+        );
+        setSocialLoading(false);
+      }
+    } catch {
+      toast.error("GitHub login শুরু করা যায়নি।");
+      setSocialLoading(false);
     }
   }
 
@@ -70,10 +91,33 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-5"
-        >
+        {/* Social Login */}
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={handleGithubLogin}
+            disabled={socialLoading}
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-black disabled:opacity-60"
+          >
+            <span className="text-lg">◉</span>
+
+            {socialLoading
+              ? "GitHub খুলছে..."
+              : "GitHub দিয়ে চালিয়ে যান"}
+          </button>
+        </div>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+
+          <span className="text-xs text-slate-400">
+            অথবা
+          </span>
+
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
               htmlFor="name"

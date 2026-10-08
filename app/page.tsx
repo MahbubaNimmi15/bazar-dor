@@ -1,3 +1,4 @@
+import CategoryNav from "@/components/CategoryNav";
 import Image from "next/image";
 import Link from "next/link";
 import AuthButtons from "@/components/AuthButtons";
@@ -148,7 +149,6 @@ export default async function Home() {
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/" className="flex items-center gap-3">
-            {/* Full Green Logo with Clear Cart */}
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-600 shadow-sm">
               <span
                 className="text-3xl leading-none"
@@ -170,77 +170,11 @@ export default async function Home() {
             </div>
           </Link>
 
-          {/* Login / Profile / Logout */}
           <AuthButtons />
         </div>
 
-        {/* Category Links */}
-        <div className="border-t border-slate-100">
-          <nav className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-4 py-3 text-sm font-medium">
-            <Link
-              href="/"
-              className="whitespace-nowrap text-green-700"
-            >
-              সব পণ্য
-            </Link>
-
-            <Link
-              href="/category/chal"
-              className="whitespace-nowrap"
-            >
-              🍚 চাল
-            </Link>
-
-            <Link
-              href="/category/dal"
-              className="whitespace-nowrap"
-            >
-              🫘 ডাল
-            </Link>
-
-            <Link
-              href="/category/tel"
-              className="whitespace-nowrap"
-            >
-              🫙 তেল
-            </Link>
-
-            <Link
-              href="/category/sobji"
-              className="whitespace-nowrap"
-            >
-              🥬 সবজি
-            </Link>
-
-            <Link
-              href="/category/mach"
-              className="whitespace-nowrap"
-            >
-              🐟 মাছ
-            </Link>
-
-            <Link
-              href="/category/mangsho"
-              className="whitespace-nowrap"
-            >
-              🍗 মাংস
-            </Link>
-
-            <Link
-              href="/category/dim-dui"
-              className="whitespace-nowrap"
-            >
-              🥛 ডিম-দুধ
-            </Link>
-
-            <Link
-              href="/category/mosla"
-              className="whitespace-nowrap"
-            >
-              🌶️ মসলা
-            </Link>
-          </nav>
-        </div>
+        {/* Active Category Navigation */}
+        <CategoryNav />
 
         {/* Animated Price Ticker */}
         <div className="overflow-hidden border-y border-slate-200 bg-white py-2 text-sm text-black">
