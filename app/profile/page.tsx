@@ -17,13 +17,14 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
-      router.push("/signin");
+      router.replace("/signin");
     }
-  }, [isPending, session, router]);
+  }, [session, isPending, router]);
 
   useEffect(() => {
     if (session?.user?.name) {
@@ -34,14 +35,16 @@ export default function ProfilePage() {
   async function handleUpdate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    setMessage("");
+    setIsError(false);
+
     if (!name.trim()) {
       setIsError(true);
       setMessage("নাম লিখুন।");
       return;
     }
 
-    setLoading(true);
-    setMessage("");
+    setSaving(true);
 
     try {
       const { error } = await authClient.updateUser({
@@ -50,23 +53,25 @@ export default function ProfilePage() {
 
       if (error) {
         setIsError(true);
-        setMessage(error.message || "প্রোফাইল আপডেট করা যায়নি।");
+        setMessage(error.message || "নাম আপডেট করা যায়নি।");
         return;
       }
 
       await refetch();
 
       setIsError(false);
-      setMessage("প্রোফাইল সফলভাবে আপডেট হয়েছে।");
+      setMessage("প্রোফাইল সফলভাবে আপডেট হয়েছে।");
     } catch {
       setIsError(true);
-      setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      setMessage("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
   async function handleLogout() {
+    setLoggingOut(true);
+
     await authClient.signOut();
 
     router.push("/signin");
@@ -76,56 +81,69 @@ export default function ProfilePage() {
   if (isPending) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffdf7]">
-        <p className="text-slate-500">লোড হচ্ছে...</p>
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-green-600" />
+
+          <p className="mt-4 text-sm text-slate-500">
+            প্রোফাইল লোড হচ্ছে...
+          </p>
+        </div>
       </main>
     );
   }
 
   if (!session) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fffdf7]">
-        <p className="text-slate-500">সাইন ইন পেজে নেওয়া হচ্ছে...</p>
-      </main>
-    );
+    return null;
   }
 
   return (
-    <main className="min-h-screen bg-[#fffdf7] px-4 py-10">
-      <div className="mx-auto max-w-xl">
-        <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-8">
-          <div className="text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-700">
-              {session.user.name?.charAt(0).toUpperCase() || "U"}
+    <main className="min-h-screen bg-[#fffdf7] px-4 py-10 text-slate-900">
+      <div className="mx-auto max-w-2xl">
+        <Link
+          href="/"
+          className="inline-flex rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
+        >
+          ← হোম পেজে ফিরে যান
+        </Link>
+
+        <div className="mt-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-700">
+              {session.user.name?.charAt(0)?.toUpperCase() || "U"}
             </div>
 
-            <h1 className="mt-4 text-3xl font-bold text-slate-900">
-              আমার প্রোফাইল
-            </h1>
-
-            <p className="mt-2 text-sm text-slate-500">
-              আপনার অ্যাকাউন্টের তথ্য
-            </p>
-          </div>
-
-          <div className="mt-8 rounded-2xl bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">নাম</p>
-            <p className="mt-1 font-semibold text-slate-900">
-              {session.user.name}
-            </p>
-
-            <p className="mt-5 text-sm text-slate-500">ইমেইল</p>
-            <p className="mt-1 font-semibold text-slate-900">
-              {session.user.email}
-            </p>
-          </div>
-
-          <form onSubmit={handleUpdate} className="mt-7 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                নাম পরিবর্তন করুন
+              <p className="text-sm font-medium text-green-700">
+                আপনার প্রোফাইল
+              </p>
+
+              <h1 className="mt-1 text-3xl font-bold">
+                {session.user.name}
+              </h1>
+
+              <p className="mt-1 text-sm text-slate-500">
+                {session.user.email}
+              </p>
+            </div>
+          </div>
+
+          <div className="my-8 h-px bg-slate-200" />
+
+          <form onSubmit={handleUpdate}>
+            <h2 className="text-xl font-bold">
+              প্রোফাইল আপডেট
+            </h2>
+
+            <div className="mt-5">
+              <label
+                htmlFor="name"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                নাম
               </label>
 
               <input
+                id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -133,9 +151,22 @@ export default function ProfilePage() {
               />
             </div>
 
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                ইমেইল
+              </label>
+
+              <input
+                type="email"
+                value={session.user.email}
+                disabled
+                className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
+              />
+            </div>
+
             {message && (
               <div
-                className={`rounded-xl px-4 py-3 text-sm ${
+                className={`mt-5 rounded-xl px-4 py-3 text-sm ${
                   isError
                     ? "bg-red-50 text-red-600"
                     : "bg-green-50 text-green-700"
@@ -147,26 +178,23 @@ export default function ProfilePage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+              disabled={saving}
+              className="mt-6 w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "আপডেট হচ্ছে..." : "প্রোফাইল আপডেট করুন"}
+              {saving ? "আপডেট হচ্ছে..." : "নাম আপডেট করুন"}
             </button>
           </form>
 
-          <button
-            onClick={handleLogout}
-            className="mt-4 w-full rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-semibold text-red-600 hover:bg-red-100"
-          >
-            লগ আউট
-          </button>
-
-          <Link
-            href="/"
-            className="mt-6 block text-center text-sm font-medium text-slate-500 hover:text-green-700"
-          >
-            ← হোম পেজে ফিরে যান
-          </Link>
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+            >
+              {loggingOut ? "লগ আউট হচ্ছে..." : "লগ আউট"}
+            </button>
+          </div>
         </div>
       </div>
     </main>
