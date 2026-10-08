@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import AuthButtons from "@/components/AuthButtons";
 
 type Product = {
   id: number;
@@ -89,7 +90,9 @@ function ProductCard({ product }: { product: Product }) {
 
       <div className="mt-5 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-500">আজকের দাম</p>
+          <p className="text-xs text-slate-500">
+            আজকের দাম
+          </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
             {toBanglaNumber(product.today)} টাকা
@@ -101,8 +104,8 @@ function ProductCard({ product }: { product: Product }) {
             isUp
               ? "bg-green-100 text-green-700"
               : isDown
-              ? "bg-red-100 text-red-700"
-              : "bg-slate-100 text-slate-600"
+                ? "bg-red-100 text-red-700"
+                : "bg-slate-100 text-slate-600"
           }`}
         >
           {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
@@ -135,12 +138,16 @@ export default async function Home() {
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/logo-icon.png"
-              alt="BazarDor Logo"
-              width={50}
-              height={50}
-            />
+            {/* Full Green Logo with Clear Cart */}
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-600 shadow-sm">
+              <span
+                className="text-3xl leading-none"
+                role="img"
+                aria-label="Shopping Cart"
+              >
+                🛒
+              </span>
+            </div>
 
             <div>
               <h1 className="text-xl font-bold text-green-700">
@@ -153,21 +160,8 @@ export default async function Home() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/signin"
-              className="rounded-lg border border-green-600 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
-            >
-              সাইন ইন
-            </Link>
-
-            <Link
-              href="/signup"
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
-            >
-              সাইন আপ
-            </Link>
-          </div>
+          {/* Login / Profile / Logout */}
+          <AuthButtons />
         </div>
 
         {/* Category Links */}
@@ -180,53 +174,83 @@ export default async function Home() {
               সব পণ্য
             </Link>
 
-            <Link href="/category/chal" className="whitespace-nowrap">
+            <Link
+              href="/category/chal"
+              className="whitespace-nowrap"
+            >
               🍚 চাল
             </Link>
 
-            <Link href="/category/dal" className="whitespace-nowrap">
+            <Link
+              href="/category/dal"
+              className="whitespace-nowrap"
+            >
               🫘 ডাল
             </Link>
 
-            <Link href="/category/tel" className="whitespace-nowrap">
+            <Link
+              href="/category/tel"
+              className="whitespace-nowrap"
+            >
               🫙 তেল
             </Link>
 
-            <Link href="/category/sobji" className="whitespace-nowrap">
+            <Link
+              href="/category/sobji"
+              className="whitespace-nowrap"
+            >
               🥬 সবজি
             </Link>
 
-            <Link href="/category/mach" className="whitespace-nowrap">
+            <Link
+              href="/category/mach"
+              className="whitespace-nowrap"
+            >
               🐟 মাছ
             </Link>
 
-            <Link href="/category/mangsho" className="whitespace-nowrap">
+            <Link
+              href="/category/mangsho"
+              className="whitespace-nowrap"
+            >
               🍗 মাংস
             </Link>
 
-            <Link href="/category/dim-dui" className="whitespace-nowrap">
+            <Link
+              href="/category/dim-dui"
+              className="whitespace-nowrap"
+            >
               🥛 ডিম-দুধ
             </Link>
 
-            <Link href="/category/mosla" className="whitespace-nowrap">
+            <Link
+              href="/category/mosla"
+              className="whitespace-nowrap"
+            >
               🌶️ মসলা
             </Link>
           </nav>
         </div>
 
         {/* Animated Price Ticker */}
-        <div className="overflow-hidden bg-green-700 py-2 text-sm text-white">
+        <div className="overflow-hidden border-y border-slate-200 bg-white py-2 text-sm text-black">
           <div className="animate-marquee whitespace-nowrap">
             {products.slice(0, 10).map((product) => (
-              <span key={product.id} className="mr-10">
+              <span
+                key={product.id}
+                className="mr-10 font-medium text-black"
+              >
                 {product.image} {product.nameBn}{" "}
                 {toBanglaNumber(product.today)} টাকা{" "}
                 {product.change.dir === "up"
                   ? "▲"
                   : product.change.dir === "down"
-                  ? "▼"
-                  : "—"}{" "}
-                {toBanglaNumber(Math.abs(product.change.pct))}%
+                    ? "▼"
+                    : "—"}{" "}
+                {toBanglaNumber(
+                  Math.abs(product.change.pct)
+                )}
+                %
               </span>
             ))}
           </div>
