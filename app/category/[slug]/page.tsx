@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AuthButtons from "@/components/AuthButtons";
+import CategoryNav from "@/components/CategoryNav";
 import SortSelect from "./SortSelect";
 
 type Product = {
@@ -32,19 +34,18 @@ async function getProducts(): Promise<Product[]> {
       const response = await fetch(url);
 
       if (response.ok) {
-        const data: Product[] = await response.json();
-        return data;
+        return await response.json();
       }
     } catch (error) {
-      console.error(`Failed to fetch category products from ${url}`, error);
+      console.error(`Failed to fetch products from ${url}`, error);
     }
   }
 
-  throw new Error("Category product data fetch failed from all APIs");
+  throw new Error("Category product data fetch failed");
 }
 
 function toBanglaNumber(value: number | string) {
-  const map: Record<string, string> = {
+  const digits: Record<string, string> = {
     "0": "০",
     "1": "১",
     "2": "২",
@@ -57,7 +58,10 @@ function toBanglaNumber(value: number | string) {
     "9": "৯",
   };
 
-  return String(value).replace(/[0-9]/g, (digit) => map[digit]);
+  return String(value).replace(
+    /[0-9]/g,
+    (digit) => digits[digit]
+  );
 }
 
 function getUnit(unit: string) {
@@ -67,6 +71,16 @@ function getUnit(unit: string) {
   if (unit === "piece") return "প্রতি পিস";
 
   return unit;
+}
+
+function getBanglaDate() {
+  return new Intl.DateTimeFormat("bn-BD", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
+  }).format(new Date());
 }
 
 export default async function CategoryPage({
@@ -84,39 +98,96 @@ export default async function CategoryPage({
   const decodedSlug = decodeURIComponent(slug).toLowerCase();
 
   const categoryProducts = products.filter(
-    (product) => product.category.toLowerCase() === decodedSlug
+    (product) =>
+      product.category.toLowerCase() === decodedSlug
   );
 
   if (categoryProducts.length === 0) {
     notFound();
   }
 
-  let sortedProducts = [...categoryProducts];
+  const sortedProducts = [...categoryProducts];
 
   if (sort === "low") {
-    sortedProducts.sort((a, b) => a.today - b.today);
+    sortedProducts.sort(
+      (a, b) => Number(a.today) - Number(b.today)
+    );
   }
 
   if (sort === "high") {
-    sortedProducts.sort((a, b) => b.today - a.today);
+    sortedProducts.sort(
+      (a, b) => Number(b.today) - Number(a.today)
+    );
   }
 
-  const categoryName = categoryProducts[0].categoryNameBn;
-  const categoryIcon = categoryProducts[0].categoryIcon;
+  const categoryName =
+    categoryProducts[0].categoryNameBn;
+
+  const categoryIcon =
+    categoryProducts[0].categoryIcon;
 
   return (
     <main className="min-h-screen bg-[#fffdf7] text-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <Link
-          href="/"
-          className="inline-flex items-center rounded-lg border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
-        >
-          ← হোম পেজে ফিরে যান
-        </Link>
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-3"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-600 text-2xl">
+              🛒
+            </div>
 
-        <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="font-bold text-green-700 sm:text-xl">
+                বাজার দর
+              </h1>
+
+              <p className="truncate text-[10px] text-slate-500 sm:text-xs">
+                {getBanglaDate()}
+              </p>
+            </div>
+          </Link>
+
+          <AuthButtons />
+        </div>
+
+        {/* Active category */}
+        <CategoryNav />
+
+        {/* Ticker */}
+        <div className="overflow-hidden border-t border-slate-200 bg-white py-2 text-sm text-black">
+          <div className="animate-marquee whitespace-nowrap">
+            {products.slice(0, 10).map((product) => (
+              <span
+                key={product.id}
+                className="mr-10 font-medium"
+              >
+                {product.image} {product.nameBn}{" "}
+                {toBanglaNumber(product.today)} টাকা{" "}
+                {product.change.dir === "up"
+                  ? "▲"
+                  : product.change.dir === "down"
+                    ? "▼"
+                    : "—"}{" "}
+                {toBanglaNumber(
+                  Math.abs(product.change.pct)
+                )}
+                %
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        {/* Category heading */}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-5xl">{categoryIcon}</div>
+            <div className="text-5xl">
+              {categoryIcon}
+            </div>
 
             <h1 className="mt-4 text-3xl font-bold md:text-4xl">
               {categoryName}
@@ -130,20 +201,26 @@ export default async function CategoryPage({
           <SortSelect />
         </div>
 
+        {/* Product Cards */}
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedProducts.map((product) => {
-            const isUp = product.change.dir === "up";
-            const isDown = product.change.dir === "down";
+            const isUp =
+              product.change.dir === "up";
+
+            const isDown =
+              product.change.dir === "down";
 
             return (
               <Link
                 key={product.id}
                 href={`/product/${product.slug}`}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="text-5xl">{product.image}</div>
+                <div className="text-5xl">
+                  {product.image}
+                </div>
 
-                <h2 className="mt-4 text-lg font-bold text-slate-900">
+                <h2 className="mt-4 text-lg font-bold">
                   {product.nameBn}
                 </h2>
 
@@ -157,8 +234,11 @@ export default async function CategoryPage({
                       আজকের দাম
                     </p>
 
-                    <p className="mt-1 text-xl font-bold text-slate-900">
-                      {toBanglaNumber(product.today)} টাকা
+                    <p className="mt-1 text-xl font-bold">
+                      {toBanglaNumber(
+                        product.today
+                      )}{" "}
+                      টাকা
                     </p>
                   </div>
 
@@ -171,8 +251,17 @@ export default async function CategoryPage({
                           : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
-                    {toBanglaNumber(Math.abs(product.change.pct))}%
+                    {isUp
+                      ? "▲"
+                      : isDown
+                        ? "▼"
+                        : "—"}{" "}
+                    {toBanglaNumber(
+                      Math.abs(
+                        product.change.pct
+                      )
+                    )}
+                    %
                   </span>
                 </div>
               </Link>
@@ -180,6 +269,18 @@ export default async function CategoryPage({
           })}
         </div>
       </div>
+
+      <footer className="mt-16 border-t bg-white">
+        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-4 py-8 text-sm text-slate-500 md:flex-row">
+          <p>
+            বাজার দর — প্রয়োজনীয় পণ্যের দাম এক নজরে।
+          </p>
+
+          <p>
+            সকল দাম সম্ভাব্য; বাজার অবস্থার ওপর নির্ভর করে পরিবর্তিত হয়।
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
