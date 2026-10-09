@@ -1,6 +1,5 @@
 # 🛒 BazarDor | বাজার দর
 
-# 🛒 BazarDor | বাজার দর
 
 **BazarDor (বাজার দর)** is a modern, responsive, and user-friendly daily market price web application designed for users in Bangladesh. The main goal of this project is to make essential commodity price information easy to access, understand, and compare from a single platform.
 
