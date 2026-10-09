@@ -9,37 +9,32 @@ export default function SortSelect() {
   const currentSort = searchParams.get("sort") || "default";
 
   function handleChange(value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-
     if (value === "default") {
-      params.delete("sort");
-    } else {
-      params.set("sort", value);
+      router.push(window.location.pathname);
+      return;
     }
 
-    const query = params.toString();
-
-    router.push(query ? `?${query}` : "?");
+    router.push(`${window.location.pathname}?sort=${value}`);
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <label
         htmlFor="sort"
         className="text-sm font-medium text-slate-700"
       >
-        দাম অনুযায়ী:
+        সাজান:
       </label>
 
       <select
         id="sort"
         value={currentSort}
         onChange={(e) => handleChange(e.target.value)}
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-green-600"
+        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
       >
         <option value="default">ডিফল্ট</option>
-        <option value="low">Ascending — কম থেকে বেশি</option>
-        <option value="high">Descending — বেশি থেকে কম</option>
+        <option value="low">দাম: কম থেকে বেশি</option>
+        <option value="high">দাম: বেশি থেকে কম</option>
       </select>
     </div>
   );

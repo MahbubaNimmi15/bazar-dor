@@ -21,26 +21,29 @@ export default function AuthButtons() {
 
   if (isPending) {
     return (
-      <div className="h-10 w-28 animate-pulse rounded-lg bg-slate-100" />
+      <div className="flex items-center gap-2">
+        <div className="h-10 w-20 animate-pulse rounded-lg bg-slate-100" />
+        <div className="h-10 w-20 animate-pulse rounded-lg bg-slate-100" />
+      </div>
     );
   }
 
-  if (session) {
+  if (!session) {
     return (
       <div className="flex items-center gap-2">
         <Link
-          href="/profile"
-          className="rounded-lg border border-green-600 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
+          href="/signin"
+          className="rounded-lg border border-green-600 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 sm:px-4"
         >
-          প্রোফাইল
+          সাইন ইন
         </Link>
 
-        <button
-          onClick={handleLogout}
-          className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600"
+        <Link
+          href="/signup"
+          className="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-green-700 sm:px-4"
         >
-          লগ আউট
-        </button>
+          সাইন আপ
+        </Link>
       </div>
     );
   }
@@ -48,18 +51,19 @@ export default function AuthButtons() {
   return (
     <div className="flex items-center gap-2">
       <Link
-        href="/signin"
-        className="rounded-lg border border-green-600 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50"
+        href="/profile"
+        className="rounded-lg border border-green-600 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 sm:px-4"
       >
-        সাইন ইন
+        প্রোফাইল
       </Link>
 
-      <Link
-        href="/signup"
-        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-600 sm:px-4"
       >
-        সাইন আপ
-      </Link>
+        লগ আউট
+      </button>
     </div>
   );
 }

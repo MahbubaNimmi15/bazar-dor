@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BazarDor | বাজার দর
 
-## Getting Started
+BazarDor is a responsive web application that displays daily market prices of essential products in Bangladesh.
 
-First, run the development server:
+Users can browse all products, filter by category, sort by price, view product details, sign up, sign in, and update profile information.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Technologies Used
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 16
+- React
+- TypeScript
+- Tailwind CSS
+- Better Auth
+- SQLite
+- React Hot Toast
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Responsive design for mobile, tablet, and desktop
+2. Bengali market price interface
+3. Dynamic Bangla date
+4. Product category navigation
+5. Active category highlighting
+6. Top price risers section
+7. Top price fallers section
+8. All products section
+9. Category-wise product filtering
+10. Price sorting from low to high
+11. Price sorting from high to low
+12. Protected product details page
+13. Email and password authentication
+14. Google and GitHub social login integration
+15. Profile page
+16. Update user information
+17. Login, signup, logout, and validation toast messages
+18. Loading skeleton UI
+19. Custom 404 page
+20. Bengali number formatting
 
-## Learn More
+## API
 
-To learn more about Next.js, take a look at the following resources:
+Primary API:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+https://api.api-store.workers.dev/api/bazardor
