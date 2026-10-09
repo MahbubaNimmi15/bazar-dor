@@ -41,5 +41,5 @@ Users can browse all products, filter by category, sort by price, view product d
 
 Primary API:
 
-```text
+text
 https://api.api-store.workers.dev/api/bazardor
